@@ -1,7 +1,7 @@
 <!--
  * @Author: your name
  * @Date: 2021-02-23 17:43:02
- * @LastEditTime: 2021-02-23 17:49:36
+ * @LastEditTime: 2021-02-23 17:50:01
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: \VideoPointerTool\README.md
@@ -15,6 +15,7 @@
 > cd build 
 > cmake .. -G"NMake Makefiles"
 > nmake
+
 ### linux
 > mkdir  build
 > cmake ..
