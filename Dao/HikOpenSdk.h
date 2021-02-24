@@ -1,7 +1,7 @@
 /*
  * @Author: your name
  * @Date: 2021-02-23 11:37:07
- * @LastEditTime: 2021-02-23 15:01:06
+ * @LastEditTime: 2021-02-24 09:43:36
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: \VideoPlayer\Dao\HikOpenSdk.h
@@ -33,7 +33,7 @@ public:
 
 	QString QueryCameraList(int page, int size, RestServiceI::CameraInfo* cameras);
 
-	QString QueryURL(const QString& camera_id, QString& url);
+	QString QueryURL(const QString& camera_id, QString* url);
 
 private:
 	bool RequestData(const std::string& uri, const std::string& body, std::string& resp);

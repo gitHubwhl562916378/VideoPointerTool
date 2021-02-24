@@ -1,7 +1,7 @@
 ﻿/*
  * @Author: your name
  * @Date: 2021-02-22 19:38:50
- * @LastEditTime: 2021-02-23 17:04:02
+ * @LastEditTime: 2021-02-24 10:13:34
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: \VideoPlayer\mainwindow.cpp
@@ -34,6 +34,7 @@ MainWindow::MainWindow(QWidget *parent)
     pageIndicator_ = new PageIndicator;
     videoPlayer_ = new Player;
     videoPlayer_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    decode_label_ = new QLabel(tr("解码方式"));
     decodeCombox_ = new QComboBox;
     videoGroupbox_ = new QGroupBox;
 
@@ -49,6 +50,7 @@ MainWindow::MainWindow(QWidget *parent)
     mainLay->addLayout(vlay,2);
 
     vlay = new QVBoxLayout;
+    vlay->addWidget(decode_label_);
     vlay->addWidget(decodeCombox_);
     vlay->addStretch();
     hlay = new QHBoxLayout;
@@ -62,17 +64,20 @@ MainWindow::MainWindow(QWidget *parent)
 
     tableW_->setSelectionBehavior(QAbstractItemView::SelectRows);
     QStringList headers_list;
-    headers_list << tr("cameraName") << tr("cameraIndexCode") << tr("cameraTypeName") << tr("rtsp") << tr("status") << tr("statusName") << tr("treatyTypeName");
+    headers_list << tr("cameraName") << tr("cameraIndexCode") << tr("cameraTypeName") << tr("status") << tr("statusName") << tr("treatyTypeName");
     tableW_->setColumnCount(headers_list.count());
     tableW_->setHorizontalHeaderLabels(headers_list);
     tableW_->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     tableW_->setEditTriggers(QTableWidget::NoEditTriggers);
+    decode_label_->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
                                                 
-    decodeCombox_->addItems(QStringList() << "cpu" << "cuda" << "cuda_plugin");
+    decodeCombox_->addItems(QStringList() << "cpu" << "qsv" << "cuda" << "cuda_plugin");
     pageIndicator_->setEnabled(false);
     connect(flushAllBtn_, SIGNAL(clicked()), this, SLOT(slotFlushBtnClicked()));
     connect(pageIndicator_, SIGNAL(sigPageClicked(int)), this, SLOT(slotPageindicatorActived(int)));
     connect(tableW_, SIGNAL(itemDoubleClicked(QTableWidgetItem*)), this, SLOT(slotTableItemDClicked(QTableWidgetItem*)));
+    connect(videoPlayer_, SIGNAL(sigVideoStarted(int,int)), this, SLOT(slotOnVideoStarted(int,int)));
+    connect(videoPlayer_, SIGNAL(sigError(QString)), this, SLOT(slotOnVideoError(QString)));
 
     setUserStyle(userStyle());
 }
@@ -89,6 +94,10 @@ void MainWindow::setUserStyle(int s)
     setPalette(pal);
     setAutoFillBackground(true);
     pageIndicator_->setUserStyle();
+
+    pal = decode_label_->palette();
+    pal.setColor(QPalette::Foreground, Qt::white);
+    decode_label_->setPalette(pal);
 }
 
 QSize MainWindow::sizeHint() const
@@ -155,36 +164,66 @@ void MainWindow::slotGetCameras(RestServiceI::CameraInfo infos)
         tableW_->setItem(tableW_->rowCount() - 1,0,new QTableWidgetItem(camera.cameraName));
         tableW_->setItem(tableW_->rowCount() - 1,1,new QTableWidgetItem(camera.cameraIndexCode));
         tableW_->setItem(tableW_->rowCount() - 1,2,new QTableWidgetItem(camera.cameraTypeName));
-        tableW_->setItem(tableW_->rowCount() - 1,3,new QTableWidgetItem(camera.rtsp));
-        tableW_->setItem(tableW_->rowCount() - 1,4,new QTableWidgetItem(QString::number(camera.status)));
-        tableW_->setItem(tableW_->rowCount() - 1,5,new QTableWidgetItem(camera.statusName));
-        tableW_->setItem(tableW_->rowCount() - 1,6,new QTableWidgetItem(camera.treatyTypeName));
+        tableW_->setItem(tableW_->rowCount() - 1,3,new QTableWidgetItem(QString::number(camera.status)));
+        tableW_->setItem(tableW_->rowCount() - 1,4,new QTableWidgetItem(camera.statusName));
+        tableW_->setItem(tableW_->rowCount() - 1,5,new QTableWidgetItem(camera.treatyTypeName));
     }
 }
 
 void MainWindow::slotTableItemDClicked(QTableWidgetItem* item)
 {
     video_wait_label_ = new WaitingLabel(videoPlayer_);
-    connect(videoPlayer_, &Player::sigVideoStarted, videoPlayer_, [this](int w, int h){
-        tableW_->setEnabled(true);
+    
+    ServiceFactoryI *serI = reinterpret_cast<ServiceFactoryI*>(qApp->property(FACETORY_KEY).toULongLong());
+    RestServiceI *service = serI->makeRestServiceI();
+    connect(service, &RestServiceI::sigRtspUrl, this, [this](QString rtsp){
+        videoPlayer_->setToolTip(rtsp);
+        videoPlayer_->startPlay(rtsp, decodeCombox_->currentText());
+    });
+    connect(service, &RestServiceI::sigError, this, [&](QString str){
         if(video_wait_label_)
         {
             video_wait_label_->close();
             delete video_wait_label_;
             video_wait_label_ = nullptr; 
         }
-    });
-    connect(videoPlayer_, &Player::sigError, videoPlayer_, [this](QString msg){
+        pageIndicator_->setEnabled(true);
+        flushAllBtn_->setEnabled(true);
         tableW_->setEnabled(true);
-        if(video_wait_label_)
-        {
-            video_wait_label_->close();
-            delete video_wait_label_;
-            video_wait_label_ = nullptr; 
-        }
+        QMessageBox::information(this, tr("获取rtsp"), str);
     });
+
+    pageIndicator_->setEnabled(false);
+    flushAllBtn_->setEnabled(false);
     tableW_->setEnabled(false);
-    QString rtsp = tableW_->item(item->row(), 3)->text();
-    videoPlayer_->startPlay(rtsp, decodeCombox_->currentText());
+    QString cameraIndexCode = tableW_->item(item->row(), 1)->text();
+    service->getRtspUrl(cameraIndexCode);
     video_wait_label_->show(500);
+}
+
+void MainWindow::slotOnVideoStarted(int w,int h)
+{
+    if(video_wait_label_)
+    {
+        video_wait_label_->close();
+        delete video_wait_label_;
+        video_wait_label_ = nullptr; 
+    }
+    pageIndicator_->setEnabled(true);
+    flushAllBtn_->setEnabled(true);
+    tableW_->setEnabled(true);
+}
+
+void MainWindow::slotOnVideoError(QString msg)
+{
+    if(video_wait_label_)
+    {
+        video_wait_label_->close();
+        delete video_wait_label_;
+        video_wait_label_ = nullptr; 
+    }
+    pageIndicator_->setEnabled(true);
+    flushAllBtn_->setEnabled(true);
+    tableW_->setEnabled(true);
+    QMessageBox::information(this, tr("播放视频"), videoPlayer_->toolTip() + ": " + msg);
 }
