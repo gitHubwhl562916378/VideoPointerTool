@@ -72,7 +72,6 @@ QString HikOpenSdk::QueryCameraList(int page, int size, RestServiceI::CameraInfo
 		
         QJsonObject js_camera_obj = val.toObject();
 		data.cameraIndexCode = js_camera_obj.value("cameraIndexCode").toString();
-		QueryURL(data.cameraIndexCode, data.rtsp);
 		data.cameraName = js_camera_obj.value("name").toString();
 		data.cameraTypeName = js_camera_obj.value("cameraTypeName").toString();
 		data.recordLocationName = js_camera_obj.value("recordLocationName").toString();
@@ -85,7 +84,7 @@ QString HikOpenSdk::QueryCameraList(int page, int size, RestServiceI::CameraInfo
 	return QString();
 }
 
-QString HikOpenSdk::QueryURL(const QString& camera, QString& url) {
+QString HikOpenSdk::QueryURL(const QString& camera, QString* url) {
 	QJsonObject q_js_body;
 	q_js_body.insert("cameraIndexCode", camera);
 	// q_js_body.insert("protocol", "rtmp");
@@ -115,7 +114,7 @@ QString HikOpenSdk::QueryURL(const QString& camera, QString& url) {
 	}
 
 	QJsonObject js_data = js_resp_obj.value("data").toObject();
-	url = js_data.value("url").toString();
+	*url = js_data.value("url").toString();
 
 	return QString();
 }

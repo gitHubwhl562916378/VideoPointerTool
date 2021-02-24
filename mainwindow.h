@@ -1,7 +1,7 @@
 /*
  * @Author: your name
  * @Date: 2021-02-22 19:38:50
- * @LastEditTime: 2021-02-23 17:02:36
+ * @LastEditTime: 2021-02-24 10:05:57
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: \VideoPlayer\mainwindow.h
@@ -40,10 +40,13 @@ private slots:
     void slotPageindicatorActived(int);
     void slotGetCameras(RestServiceI::CameraInfo);
     void slotTableItemDClicked(QTableWidgetItem*);
+    void slotOnVideoStarted(int,int);
+    void slotOnVideoError(QString);
     
 private:
     QTableWidget *tableW_;
     PageIndicator *pageIndicator_;
+    QLabel *decode_label_;
     QComboBox *decodeCombox_;
     Player *videoPlayer_;
     QGroupBox *videoGroupbox_;

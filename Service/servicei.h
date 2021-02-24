@@ -1,7 +1,7 @@
 /*
  * @Author: your name
  * @Date: 2021-02-22 19:38:49
- * @LastEditTime: 2021-02-23 14:31:03
+ * @LastEditTime: 2021-02-24 09:45:23
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: \VideoPlayer\Service\servicei.h
@@ -45,7 +45,6 @@ public:
     {
         QString cameraName;
         QString cameraIndexCode;
-        QString rtsp;
         int status;
         QString cameraTypeName;
         QString recordLocationName;
@@ -71,10 +70,12 @@ public:
     }
 
     virtual void getCameras(const CameraInfoArgs &args) = 0;
+    virtual void getRtspUrl(const QString &cameraIndexCode) = 0;
 
 signals:
     void sigError(QString);
     void sigCameras(RestServiceI::CameraInfo);
+    void sigRtspUrl(QString);
 };
 
 class VideoEncodeI : public QThread
