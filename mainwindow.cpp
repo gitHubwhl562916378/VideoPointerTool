@@ -6,6 +6,7 @@
  * @Description: In User Settings Edit
  * @FilePath: \VideoPlayer\mainwindow.cpp
  */
+#include <cmath>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QTableWidget>

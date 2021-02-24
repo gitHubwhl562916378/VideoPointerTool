@@ -11,8 +11,8 @@
 #pragma once
 
 #include <functional>
-#include "Poco/Net/HttpRequest.h"
 #include "Poco/DigestEngine.h"
+#include "Poco/Net/HTTPRequest.h"
 #include "openssl/sha.h"
 #include "openssl/crypto.h"
 #include "../Service/servicei.h"

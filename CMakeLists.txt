@@ -11,6 +11,8 @@ set(CMAKE_BUILD_TYPE "Release")
 # set(CMAKE_BUILD_TYPE "Debug")
 set(CMAKE_CXX_STANDARD 17) 
 
+add_compile_options(-fpermissive)
+
 if (WIN32)
         set(Qt5_DIR C:/Qt/5.15.1/msvc2019_64/lib/cmake/Qt5)
         set(FFMPEG_INCLUDE_DIRS E:/ffmpeg/x64/include)
@@ -39,11 +41,12 @@ elseif (UNIX)
         find_library(SWSCALE_LIBRAR swscale HINTS ${PC_SWSCALE_LIBDIR} ${PC_SWSCALE_LIBRARY_DIRS})
         list(APPEND FFMPEG_INCLUDE_DIRS ${PC_AVFORMAT_INCLUDEDIR})
         list(APPEND FFMPEG_LIBRARIES ${AVDEVICE_LIBRARY} ${AVFORMAT_LIBRARY} ${AVUTIL_LIBRARY} ${AVCODEC_LIBRAR} ${SWSCALE_LIBRAR})
+		list(APPEND EXTERN_LIBRARIES ssl crypto)
 endif ()
 find_package(Poco REQUIRED Net JSON)
 find_package(Qt5 REQUIRED Widgets Core Gui Concurrent)
 find_package(CUDA REQUIRED)
-include_directories(${CUDA_INCLUDE_DIRS})
+include_directories(. ${CUDA_INCLUDE_DIRS})
 
 set(CMAKE_AUTOMOC ON) #自动生成moc文件
 set(CMAKE_AUTORCC ON)

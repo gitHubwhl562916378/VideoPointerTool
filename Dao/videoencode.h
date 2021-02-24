@@ -14,7 +14,9 @@ extern"C"{
 #else //Linux...
 #ifdef __cplusplus
 extern "C"{
-#endif #include <libavcodec/avcodec.h>
+#endif 
+#include <libavutil/opt.h>
+#include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
 #include <libswscale/swscale.h>
 #include <libavutil/imgutils.h>

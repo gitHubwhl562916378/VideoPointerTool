@@ -2,6 +2,7 @@ extern "C"
 {
 #include "libavformat/avformat.h"
 }
+#include <memory>
 #include <QOpenGLContext>
 #include <QMutexLocker>
 #include <QLibrary>

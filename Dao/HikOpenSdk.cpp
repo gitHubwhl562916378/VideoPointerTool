@@ -99,7 +99,7 @@ QString HikOpenSdk::QueryURL(const QString& camera, QString& url) {
 
 	std::string resp;
 	if (!RequestData(uri_str, q_body_byte.toStdString(), resp))
-		return false;
+		return QString();
 
 	QJsonParseError jsError;
 	jsDoc = QJsonDocument::fromJson(QByteArray::fromStdString(resp), &jsError);

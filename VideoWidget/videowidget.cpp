@@ -67,7 +67,7 @@ void VideoWidget::initializeGL()
     auto context = QOpenGLContext::currentContext();
     auto surface = context->surface();
 
-    auto render_surface = new QOffscreenSurface(nullptr, this);
+    auto render_surface = new QOffscreenSurface(nullptr);//, this);
     render_surface->setFormat(surface->format());
     render_surface->create();
 

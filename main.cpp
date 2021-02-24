@@ -7,7 +7,9 @@
  * @FilePath: \VideoPlayer\main.cpp
  */
 #include <QApplication>
+#ifdef WIN32
 #include <Windows.h>
+#endif
 #include "Service/servicefacetory.h"
 #include "mainwindow.h"
 
