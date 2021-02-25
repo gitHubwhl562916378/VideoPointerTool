@@ -1,7 +1,7 @@
 /*
  * @Author: your name
  * @Date: 2021-02-22 19:38:50
- * @LastEditTime: 2021-02-24 10:05:57
+ * @LastEditTime: 2021-02-25 11:36:12
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: \VideoPlayer\mainwindow.h
@@ -20,6 +20,7 @@ QT_FORWARD_DECLARE_CLASS(QGroupBox)
 QT_FORWARD_DECLARE_CLASS(QPushButton)
 QT_FORWARD_DECLARE_CLASS(QTableWidgetItem)
 QT_FORWARD_DECLARE_CLASS(WaitingLabel)
+QT_FORWARD_DECLARE_CLASS(QMenu)
 class MainWindow : public WidgetI
 {
     Q_OBJECT
@@ -44,6 +45,8 @@ private slots:
     void slotOnVideoError(QString);
     
 private:
+    void PlayVideoByCameraIndexCode(const QString &);
+
     QTableWidget *tableW_;
     PageIndicator *pageIndicator_;
     QLabel *decode_label_;
@@ -51,6 +54,7 @@ private:
     Player *videoPlayer_;
     QGroupBox *videoGroupbox_;
     QPushButton *flushAllBtn_;
+    QMenu *playerMenu_;
     bool cameraInfoPageNeedInited_;
     int table_row_count_ = 10;
 

@@ -1,7 +1,7 @@
 ﻿/*
  * @Author: your name
  * @Date: 2021-02-22 19:38:50
- * @LastEditTime: 2021-02-24 10:13:34
+ * @LastEditTime: 2021-02-25 12:08:03
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: \VideoPlayer\mainwindow.cpp
@@ -18,6 +18,8 @@
 #include <QApplication>
 #include <QHeaderView>
 #include <QMessageBox>
+#include <QInputDialog>
+#include <QMenu>
 #include "player.h"
 #include "pageindicator.h"
 #include "Service/servicefacetory.h"
@@ -38,6 +40,7 @@ MainWindow::MainWindow(QWidget *parent)
     decode_label_ = new QLabel(tr("解码方式"));
     decodeCombox_ = new QComboBox;
     videoGroupbox_ = new QGroupBox;
+    playerMenu_ = new QMenu;
 
     QVBoxLayout *mainLay = new QVBoxLayout;
 
@@ -71,7 +74,22 @@ MainWindow::MainWindow(QWidget *parent)
     tableW_->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     tableW_->setEditTriggers(QTableWidget::NoEditTriggers);
     decode_label_->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-                                                
+
+    videoPlayer_->setContextMenuPolicy(Qt::CustomContextMenu);
+    playerMenu_->addAction(tr("输入cameraIndexCode播放"),[&]{
+        bool is_ok;
+        QString cameraIndexCode = QInputDialog::getText(this, tr("播放rtsp"), tr("cameraIndexCode"), QLineEdit::Normal, QString(), &is_ok);
+        if(!is_ok)
+        {
+            return;
+        }
+        PlayVideoByCameraIndexCode(cameraIndexCode);
+    });
+    connect(videoPlayer_,&Player::customContextMenuRequested,this,[&](const QPoint &p){
+        playerMenu_->move(videoPlayer_->mapToGlobal(p));
+        playerMenu_->show();
+    });
+
     decodeCombox_->addItems(QStringList() << "cpu" << "qsv" << "cuda" << "cuda_plugin");
     pageIndicator_->setEnabled(false);
     connect(flushAllBtn_, SIGNAL(clicked()), this, SLOT(slotFlushBtnClicked()));
@@ -173,33 +191,7 @@ void MainWindow::slotGetCameras(RestServiceI::CameraInfo infos)
 
 void MainWindow::slotTableItemDClicked(QTableWidgetItem* item)
 {
-    video_wait_label_ = new WaitingLabel(videoPlayer_);
-    
-    ServiceFactoryI *serI = reinterpret_cast<ServiceFactoryI*>(qApp->property(FACETORY_KEY).toULongLong());
-    RestServiceI *service = serI->makeRestServiceI();
-    connect(service, &RestServiceI::sigRtspUrl, this, [this](QString rtsp){
-        videoPlayer_->setToolTip(rtsp);
-        videoPlayer_->startPlay(rtsp, decodeCombox_->currentText());
-    });
-    connect(service, &RestServiceI::sigError, this, [&](QString str){
-        if(video_wait_label_)
-        {
-            video_wait_label_->close();
-            delete video_wait_label_;
-            video_wait_label_ = nullptr; 
-        }
-        pageIndicator_->setEnabled(true);
-        flushAllBtn_->setEnabled(true);
-        tableW_->setEnabled(true);
-        QMessageBox::information(this, tr("获取rtsp"), str);
-    });
-
-    pageIndicator_->setEnabled(false);
-    flushAllBtn_->setEnabled(false);
-    tableW_->setEnabled(false);
-    QString cameraIndexCode = tableW_->item(item->row(), 1)->text();
-    service->getRtspUrl(cameraIndexCode);
-    video_wait_label_->show(500);
+    PlayVideoByCameraIndexCode(tableW_->item(item->row(), 1)->text());
 }
 
 void MainWindow::slotOnVideoStarted(int w,int h)
@@ -227,4 +219,34 @@ void MainWindow::slotOnVideoError(QString msg)
     flushAllBtn_->setEnabled(true);
     tableW_->setEnabled(true);
     QMessageBox::information(this, tr("播放视频"), videoPlayer_->toolTip() + ": " + msg);
+}
+
+void MainWindow::PlayVideoByCameraIndexCode(const QString &cameraIndexCode)
+{
+    video_wait_label_ = new WaitingLabel(videoPlayer_);
+    
+    ServiceFactoryI *serI = reinterpret_cast<ServiceFactoryI*>(qApp->property(FACETORY_KEY).toULongLong());
+    RestServiceI *service = serI->makeRestServiceI();
+    connect(service, &RestServiceI::sigRtspUrl, this, [this](QString rtsp){
+        videoPlayer_->setToolTip(rtsp);
+        videoPlayer_->startPlay(rtsp, decodeCombox_->currentText());
+    });
+    connect(service, &RestServiceI::sigError, this, [&](QString str){
+        if(video_wait_label_)
+        {
+            video_wait_label_->close();
+            delete video_wait_label_;
+            video_wait_label_ = nullptr; 
+        }
+        pageIndicator_->setEnabled(true);
+        flushAllBtn_->setEnabled(true);
+        tableW_->setEnabled(true);
+        QMessageBox::information(this, tr("获取rtsp"), str);
+    });
+
+    pageIndicator_->setEnabled(false);
+    flushAllBtn_->setEnabled(false);
+    tableW_->setEnabled(false);
+    service->getRtspUrl(cameraIndexCode);
+    video_wait_label_->show(500);
 }

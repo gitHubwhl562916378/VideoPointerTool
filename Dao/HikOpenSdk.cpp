@@ -5,6 +5,7 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QJsonParseError>
+// #include <QMessageAuthenticationCode>
 #include "Poco/URI.h"
 #include "Poco/Format.h"
 #include "Poco/NumberParser.h"
@@ -150,6 +151,10 @@ bool HikOpenSdk::RequestData(const std::string& uri, const std::string& body, st
 
 	http_client.set_default_headers(http_headers);
 	http_client.set_keep_alive(false);
+	// QSslConfigurationsslConf=QSslConfiguration::defaultConfiguration();
+	// sslConf.setPeerVerifyMode(QSslSocket::VerifyNone);
+	// QSslConfiguration::setDefaultConfiguration(sslConf); 全部加在main函数，启动时
+
 	http_client.enable_server_certificate_verification(false);
 
 	http_client.set_connection_timeout(2);
@@ -202,6 +207,11 @@ void HikOpenSdk::GenerateDigestSignature(std::string& signature, std::map<std::s
 	signature_enc.write((char*)digest.data(), digest.size());
 	signature_enc.close();
 	signature = signature_os.str();
+	// signature = signature_os.str();
+	// std::cout << text << std::endl;
+	// std::cout << " poco " << signature << std::endl;
+	// qDebug() << " Qt " << QMessageAuthenticationCode::hash(QByteArray::fromStdString(text), QByteArray::fromStdString(app_secret_), QCryptographicHash::Sha256).toBase64();
+
 }
 
 KLSHA256Engine::KLSHA256Engine() {
