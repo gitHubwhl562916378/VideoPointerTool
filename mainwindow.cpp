@@ -1,7 +1,7 @@
 ﻿/*
  * @Author: your name
  * @Date: 2021-02-22 19:38:50
- * @LastEditTime: 2021-02-25 12:08:03
+ * @LastEditTime: 2021-02-25 12:26:13
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: \VideoPlayer\mainwindow.cpp
@@ -84,6 +84,16 @@ MainWindow::MainWindow(QWidget *parent)
             return;
         }
         PlayVideoByCameraIndexCode(cameraIndexCode);
+    });
+    playerMenu_->addAction(tr("输入rtsp播放"),[&]{
+        bool is_ok;
+        QString rtsp = QInputDialog::getText(this, tr("播放rtsp"), tr("rtsp"), QLineEdit::Normal, QString(), &is_ok);
+        if(!is_ok)
+        {
+            return;
+        }
+        videoPlayer_->setToolTip(rtsp);
+        videoPlayer_->startPlay(rtsp, decodeCombox_->currentText());
     });
     connect(videoPlayer_,&Player::customContextMenuRequested,this,[&](const QPoint &p){
         playerMenu_->move(videoPlayer_->mapToGlobal(p));
