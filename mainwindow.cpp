@@ -1,7 +1,7 @@
 ﻿/*
  * @Author: your name
  * @Date: 2021-02-22 19:38:50
- * @LastEditTime: 2021-02-25 12:26:13
+ * @LastEditTime: 2021-02-25 14:09:15
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: \VideoPlayer\mainwindow.cpp
@@ -40,7 +40,7 @@ MainWindow::MainWindow(QWidget *parent)
     decode_label_ = new QLabel(tr("解码方式"));
     decodeCombox_ = new QComboBox;
     videoGroupbox_ = new QGroupBox;
-    playerMenu_ = new QMenu;
+    playerMenu_ = new QMenu(videoPlayer_);
 
     QVBoxLayout *mainLay = new QVBoxLayout;
 
