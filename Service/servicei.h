@@ -1,7 +1,7 @@
 /*
  * @Author: your name
  * @Date: 2021-02-22 19:38:49
- * @LastEditTime: 2021-02-24 09:45:23
+ * @LastEditTime: 2021-02-26 21:53:28
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: \VideoPlayer\Service\servicei.h
@@ -20,7 +20,8 @@ class ServiceFactoryI
 {
 public:
     enum RestInterfaceType{
-        Concurrent
+        HttplibConcurrent,
+        QNetworkConcurrent
     };
     enum NotifyInterfaceType{
         Mqtt,
@@ -33,7 +34,7 @@ public:
 
     virtual ~ServiceFactoryI(){}
     virtual NotifyServiceI* makeNotifyServiceI(NotifyInterfaceType s = Mqtt) = 0;
-    virtual RestServiceI* makeRestServiceI(RestInterfaceType s = Concurrent) = 0;
+    virtual RestServiceI* makeRestServiceI(RestInterfaceType s = QNetworkConcurrent) = 0;
     virtual VideoEncodeI* makeVideoEncodeI(VideoEncodeType t = FFmpeg) = 0;
 };
 

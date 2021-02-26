@@ -1,7 +1,7 @@
 /*
  * @Author: your name
  * @Date: 2021-02-22 19:38:49
- * @LastEditTime: 2021-02-24 09:43:50
+ * @LastEditTime: 2021-02-26 18:05:56
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: \VideoPlayer\Service\restserviceconcurrent.cpp
@@ -11,7 +11,7 @@
 #include <QDebug>
 #include "restserviceconcurrent.h"
 
-RestServiceConcurrent::RestServiceConcurrent(QObject *parent)
+RestServiceConcurrent::RestServiceConcurrent(QObject *parent):RestServiceI(parent)
 {
     sdk_ptr_ = new HikOpenSdk;
 }
