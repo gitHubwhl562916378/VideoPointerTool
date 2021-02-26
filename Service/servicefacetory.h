@@ -2,7 +2,7 @@
 #define SERVICEFACETORY_H
 
 #include "servicei.h"
-#include "Service/restserviceconcurrent.h"
+#include "restserviceconcurrent.h"
 #include "videoencodebyffmpeg.h"
 class ServiceFactory : public ServiceFactoryI
 {
