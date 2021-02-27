@@ -1,7 +1,7 @@
 /*
  * @Author: your name
  * @Date: 2021-02-22 19:38:49
- * @LastEditTime: 2021-02-26 22:25:06
+ * @LastEditTime: 2021-02-27 21:39:11
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: \VideoPlayer\Service\restserviceconcurrent.cpp
@@ -57,6 +57,12 @@ void RestServiceQt::getCameras(const CameraInfoArgs &args)
 
     QNetworkReply* resp = network_manager_->post(request, byte_body);
     connect(resp, &QNetworkReply::finished, this, [this, resp]{
+        if(resp->error() != QNetworkReply::NoError)
+        {
+            emit sigError(resp->errorString());
+            deleteLater();
+            return;
+        }
         QByteArray resp_body = resp->readAll();
         
         RestServiceI::CameraInfo *resData = new RestServiceI::CameraInfo;
@@ -110,21 +116,70 @@ void RestServiceQt::getCameras(const CameraInfoArgs &args)
 
 void RestServiceQt::getRtspUrl(const QString &cameraIndexCode)
 {
-    QNetworkRequest request(address_ + "/artemis/api/video/v1/cameras/previewURLs");
+    QJsonObject jsBody{
+        {"cameraIndexCode", cameraIndexCode}
+    };
+    QJsonDocument jsDoc(jsBody);
+    QByteArray byte_body = jsDoc.toJson();
+    
+    QString path = "/artemis/api/video/v1/cameras/previewURLs";
+    QNetworkRequest request(address_ + path);
+    request.setAttribute(QNetworkRequest::AutoDeleteReplyOnFinishAttribute, true);
+    request.setRawHeader("Accept", "*/*");
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    request.setRawHeader("X-Ca-Key", app_key_.toLatin1());
+    request.setRawHeader("X-Ca-Signature-Headers", "x-ca-key");
+    request.setHeader(QNetworkRequest::ContentLengthHeader, byte_body.size());
+    request.setRawHeader("X-Ca-Signature", GenerateSignature(request , path));
 
-    QString *resData = new QString;
-    QFutureWatcher<QString> *fwatcher = new QFutureWatcher<QString>(this);
-    connect(fwatcher, &QFutureWatcher<QString>::finished, this, [=]{
-        if(fwatcher->result().isEmpty())
+    QSslConfiguration sslConf = request.sslConfiguration();
+    sslConf.setPeerVerifyMode(QSslSocket::VerifyNone);
+    request.setSslConfiguration(sslConf);
+
+    request.setTransferTimeout(20000);
+
+    QNetworkReply* resp = network_manager_->post(request, byte_body);
+    connect(resp, &QNetworkReply::finished, this, [this, resp]{
+        if(resp->error() != QNetworkReply::NoError)
         {
-            emit sigRtspUrl(*resData);
-        }else{
-            emit sigError(fwatcher->result());
+            emit sigError(resp->errorString());
+            deleteLater();
+            return;
         }
-        delete resData;
+        QByteArray resp_body = resp->readAll();
+        
+        QString *resData = new QString;
+        QFutureWatcher<QString> *fwatcher = new QFutureWatcher<QString>(this);
+        connect(fwatcher, &QFutureWatcher<QString>::finished, this, [=]{
+            if(fwatcher->result().isEmpty())
+            {
+                emit sigRtspUrl(*resData);
+            }else{
+                emit sigError(fwatcher->result());
+            }
+            delete resData;
+        });
+        connect(fwatcher, SIGNAL(finished()), this, SLOT(deleteLater()));
+        fwatcher->setFuture(QtConcurrent::run([=]()->QString{
+            QJsonParseError jsError;
+            QJsonDocument jsDoc = QJsonDocument::fromJson(resp_body, &jsError);
+            if(jsError.error != QJsonParseError::NoError){
+                return jsError.errorString();
+            }
+
+            QJsonObject jsObj = jsDoc.object();
+            QString code = jsObj.value("code").toString();
+            if(code != "0")
+            {
+                return jsObj.value("msg").toString();
+            }
+
+            QJsonObject js_data = jsObj.value("data").toObject();
+            *resData = js_data.value("url").toString();
+            
+            return QString();
+        }));
     });
-    connect(fwatcher, SIGNAL(finished()), this, SLOT(deleteLater()));
-    // fwatcher->setFuture(QtConcurrent::run(sdk_ptr_, &HikOpenSdk::QueryURL, cameraIndexCode, resData));
 }
 
 QByteArray RestServiceQt::GenerateSignature(const QNetworkRequest &req, const QString &path)

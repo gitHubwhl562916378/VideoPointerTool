@@ -46,7 +46,6 @@ QString HikOpenSdk::QueryCameraList(int page, int size, RestServiceI::CameraInfo
 	rqst_json.insert("treeCode", "0");
 	QJsonDocument jsDoc(rqst_json);
 	QByteArray q_body_byte = jsDoc.toJson();
-
 	std::string resp;
 	if (!RequestData(uri_str, q_body_byte.toStdString(), resp))
 		return "RequestData failed";
@@ -141,8 +140,6 @@ bool HikOpenSdk::RequestData(const std::string& uri, const std::string& body, st
 		http_headers.emplace(head.first, head.second);
 	}
 
-	//std::cout << "GenerateDigestSignature: " << digest_signature << std::endl;
-
 	http_headers.emplace("X-Ca-Key", app_key_);
 	http_headers.emplace("X-Ca-Signature", digest_signature);
 	http_headers.emplace("X-Ca-Signature-Headers", "x-ca-key");
@@ -151,9 +148,6 @@ bool HikOpenSdk::RequestData(const std::string& uri, const std::string& body, st
 
 	http_client.set_default_headers(http_headers);
 	http_client.set_keep_alive(false);
-	// QSslConfigurationsslConf=QSslConfiguration::defaultConfiguration();
-	// sslConf.setPeerVerifyMode(QSslSocket::VerifyNone);
-	// QSslConfiguration::setDefaultConfiguration(sslConf); 全部加在main函数，启动时
 
 	http_client.enable_server_certificate_verification(false);
 
@@ -208,10 +202,6 @@ void HikOpenSdk::GenerateDigestSignature(std::string& signature, std::map<std::s
 	signature_enc.close();
 	signature = signature_os.str();
 	// signature = signature_os.str();
-	// std::cout << text << std::endl;
-	// std::cout << " poco " << signature << std::endl;
-	// qDebug() << " Qt " << QMessageAuthenticationCode::hash(QByteArray::fromStdString(text), QByteArray::fromStdString(app_secret_), QCryptographicHash::Sha256).toBase64();
-
 }
 
 KLSHA256Engine::KLSHA256Engine() {
