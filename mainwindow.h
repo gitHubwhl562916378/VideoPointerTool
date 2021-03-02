@@ -1,7 +1,7 @@
 /*
  * @Author: your name
  * @Date: 2021-02-22 19:38:50
- * @LastEditTime: 2021-02-25 11:36:12
+ * @LastEditTime: 2021-03-02 18:20:13
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: \VideoPlayer\mainwindow.h
@@ -43,6 +43,7 @@ private slots:
     void slotTableItemDClicked(QTableWidgetItem*);
     void slotOnVideoStarted(int,int);
     void slotOnVideoError(QString);
+    void slotOnPhotoShot(QImage);
     
 private:
     void PlayVideoByCameraIndexCode(const QString &);
@@ -54,6 +55,7 @@ private:
     Player *videoPlayer_;
     QGroupBox *videoGroupbox_;
     QPushButton *flushAllBtn_;
+    QPushButton *photoShotBtn_;
     QMenu *playerMenu_;
     bool cameraInfoPageNeedInited_;
     int table_row_count_ = 10;

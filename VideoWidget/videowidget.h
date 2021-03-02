@@ -1,3 +1,11 @@
+/*
+ * @Author: your name
+ * @Date: 2021-02-22 19:38:50
+ * @LastEditTime: 2021-03-02 18:19:26
+ * @LastEditors: Please set LastEditors
+ * @Description: In User Settings Edit
+ * @FilePath: \VideoPointerTool\VideoWidget\videowidget.h
+ */
 #ifndef VIDEOWIDGET_H
 #define VIDEOWIDGET_H
 
@@ -22,6 +30,7 @@ public:
 public slots:
     void slotPlay(QString filename, QString device);
     void slotStop();
+    void slotPhotoShot();
 
 signals:
     void sigInitized();
@@ -31,6 +40,8 @@ signals:
     void sigVideoStopped();
     void sigFps(int);
     void sigCurFpsChanged(int);
+    void sigPhotoShot(QImage);
+    void sigPhotoShotError(QString);
 
 protected:
     void initializeGL() override;

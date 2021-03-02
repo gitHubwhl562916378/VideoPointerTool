@@ -1,7 +1,7 @@
 ﻿/*
  * @Author: your name
  * @Date: 2021-02-22 19:38:50
- * @LastEditTime: 2021-02-25 14:09:15
+ * @LastEditTime: 2021-03-02 18:51:05
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: \VideoPlayer\mainwindow.cpp
@@ -20,6 +20,8 @@
 #include <QMessageBox>
 #include <QInputDialog>
 #include <QMenu>
+#include <QDir>
+#include <QUuid>
 #include "player.h"
 #include "pageindicator.h"
 #include "Service/servicefacetory.h"
@@ -39,6 +41,7 @@ MainWindow::MainWindow(QWidget *parent)
     videoPlayer_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     decode_label_ = new QLabel(tr("解码方式"));
     decodeCombox_ = new QComboBox;
+    photoShotBtn_ = new QPushButton(tr("截图"));
     videoGroupbox_ = new QGroupBox;
     playerMenu_ = new QMenu(videoPlayer_);
 
@@ -56,6 +59,7 @@ MainWindow::MainWindow(QWidget *parent)
     vlay = new QVBoxLayout;
     vlay->addWidget(decode_label_);
     vlay->addWidget(decodeCombox_);
+    vlay->addWidget(photoShotBtn_);
     vlay->addStretch();
     hlay = new QHBoxLayout;
     hlay->addLayout(vlay);
@@ -107,6 +111,19 @@ MainWindow::MainWindow(QWidget *parent)
     connect(tableW_, SIGNAL(itemDoubleClicked(QTableWidgetItem*)), this, SLOT(slotTableItemDClicked(QTableWidgetItem*)));
     connect(videoPlayer_, SIGNAL(sigVideoStarted(int,int)), this, SLOT(slotOnVideoStarted(int,int)));
     connect(videoPlayer_, SIGNAL(sigError(QString)), this, SLOT(slotOnVideoError(QString)));
+    connect(videoPlayer_, SIGNAL(sigPhotoShot(QImage)), this, SLOT(slotOnPhotoShot(QImage)));
+    connect(videoPlayer_, &Player::sigPhotoShotError, this, [this](QString msg){
+        QMessageBox::warning(videoPlayer_, tr("截图"), msg);
+    });
+    connect(photoShotBtn_, &QPushButton::clicked, this, [this]{
+        if(videoPlayer_->state() != Player::Play)
+        {
+            videoPlayer_->sigPhotoShotError(tr("请先播放视频"));
+            return;
+        }
+
+        videoPlayer_->slotPhotoShot();
+    });
 
     setUserStyle(userStyle());
 }
@@ -229,6 +246,29 @@ void MainWindow::slotOnVideoError(QString msg)
     flushAllBtn_->setEnabled(true);
     tableW_->setEnabled(true);
     QMessageBox::information(this, tr("播放视频"), videoPlayer_->toolTip() + ": " + msg);
+}
+
+void MainWindow::slotOnPhotoShot(QImage frame)
+{
+    qDebug() << frame;
+    QString p_shot_dir = "photo_shots";
+    QDir cur_dir = QDir::current();
+    cur_dir.setPath(cur_dir.absolutePath() + QDir::separator() + p_shot_dir);
+    if(!cur_dir.exists())
+    {
+        cur_dir.mkdir(cur_dir.absolutePath());
+    }
+
+    QString file_name = QUuid::createUuid().toString();
+    file_name = file_name.remove(0, 1);
+    file_name = file_name.remove(file_name.size() - 1, 1);
+    QString file_full_name = cur_dir.absolutePath() + QDir::separator() + file_name + ".jpg";
+    if(frame.save(file_full_name))
+    {
+        QMessageBox::information(videoPlayer_, tr("截图"), tr("截图成功: ") + file_full_name);
+    }else{
+        videoPlayer_->sigPhotoShotError(tr("保存失败"));
+    }
 }
 
 void MainWindow::PlayVideoByCameraIndexCode(const QString &cameraIndexCode)

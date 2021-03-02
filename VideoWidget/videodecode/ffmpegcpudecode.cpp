@@ -245,6 +245,28 @@ int FFmpegCpuDecode::decode_packet(AVCodecContext *pCodecCtx, AVPacket *packet, 
             render_->upLoad(buffer_, pFrame->width, pFrame->height);
         });
 #endif
+        if(thread()->photoShot().load())
+        {
+            SwsContext *sws_ctx = sws_getContext(pFrame->width, pFrame->height, AVPixelFormat(pFrame->format), pFrame->width, pFrame->height, AV_PIX_FMT_RGB24, SWS_BICUBIC, nullptr,nullptr,nullptr);
+            if(!sws_ctx)
+            {
+                thread()->sigPhotoShotError("sws_getContext return nullptr");
+                goto fail;
+            }
+            
+            int rgb24_size = av_image_get_buffer_size(AV_PIX_FMT_RGB24, pFrame->width,
+                                                  pFrame->height, 1);
+            uint8_t* rgb24_buffer = new uint8_t[rgb24_size];
+            uint8_t* dstSlice[1]{rgb24_buffer};
+            int dstStride[1]{pFrame->width * 3};
+            sws_scale(sws_ctx, pFrame->data, pFrame->linesize, 0, pFrame->height, dstSlice, dstStride);
+            QImage rgb_img((uchar*)rgb24_buffer, pFrame->width, pFrame->height, QImage::Format_RGB888, [](void *info){delete info;}, rgb24_buffer);
+
+            thread()->sigPhotoShot(rgb_img);
+            sws_freeContext(sws_ctx);
+
+            thread()->photoShot().store(false);
+        }
 
     fail:
         if(ret < 0){

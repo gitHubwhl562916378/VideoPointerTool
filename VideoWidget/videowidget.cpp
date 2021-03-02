@@ -31,6 +31,11 @@ VideoWidget::PlayState VideoWidget::state() const
     return m_state_;
 }
 
+void VideoWidget::slotPhotoShot()
+{
+    m_thread->photoShot().store(true);
+}
+
 void VideoWidget::slotPlay(QString filename, QString device)
 {
     if(is_initized_)
@@ -84,6 +89,8 @@ void VideoWidget::initializeGL()
     });
     connect(m_thread, &RenderThread::sigFps, this, &VideoWidget::sigFps);
     connect(m_thread, &RenderThread::sigCurFpsChanged, this, &VideoWidget::sigCurFpsChanged);
+    connect(m_thread, &RenderThread::sigPhotoShot, this, &VideoWidget::sigPhotoShot);
+    connect(m_thread, &RenderThread::sigPhotoShotError, this, &VideoWidget::sigPhotoShotError);
     connect(m_thread, SIGNAL(finished()), this, SLOT(slotFinished()), Qt::UniqueConnection);
     is_initized_ = true;
     emit sigInitized();

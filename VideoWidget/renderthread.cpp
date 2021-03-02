@@ -1,3 +1,11 @@
+/*
+ * @Author: your name
+ * @Date: 2021-02-24 11:12:49
+ * @LastEditTime: 2021-03-02 17:36:13
+ * @LastEditors: Please set LastEditors
+ * @Description: In User Settings Edit
+ * @FilePath: \VideoPointerTool\VideoWidget\renderthread.cpp
+ */
 extern "C"
 {
 #include "libavformat/avformat.h"
@@ -36,6 +44,8 @@ RenderThread::RenderThread(QSurface *surface, QOpenGLContext *ctx, QObject *pare
 
         isInited_.store(true);
     }
+
+    need_photo_shot_.store(false);
 }
 
 RenderThread::~RenderThread()
@@ -74,6 +84,11 @@ void RenderThread::setFileName(QString f)
 void RenderThread::setDevice(QString d)
 {
     device_ = d;
+}
+
+std::atomic_bool& RenderThread::photoShot()
+{
+    return need_photo_shot_;
 }
 
 void RenderThread::run()
