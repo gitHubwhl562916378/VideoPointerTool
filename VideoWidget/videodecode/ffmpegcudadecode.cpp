@@ -288,7 +288,38 @@ int FFmpegCudaDecode::decode_packet(AVCodecContext *pCodecCtx, AVPacket *packet,
             render_->upLoad(buffer_, swFrame->width, swFrame->height);
         });
 #endif
+        if(thread()->photoShot().load())
+        {   
+            //gpu拷贝到cpu，相对耗时
+            if((ret = av_hwframe_transfer_data(swFrame, pFrame, 0)) < 0 ){
+                av_strerror(ret, errorbuf, sizeof(errorbuf));
+                errorMsg = QString("Error transferring the data to system memory: %1").arg(errorbuf);
+                thread()->sigPhotoShotError(errorMsg);
+                thread()->photoShot().store(false);
+                goto fail;
+            }
 
+            SwsContext *sws_ctx = sws_getContext(swFrame->width, swFrame->height, AVPixelFormat(swFrame->format), swFrame->width, swFrame->height, AV_PIX_FMT_RGB24, SWS_BICUBIC, nullptr,nullptr,nullptr);
+            if(!sws_ctx)
+            {
+                thread()->sigPhotoShotError("sws_getContext return nullptr");
+                thread()->photoShot().store(false);
+                goto fail;
+            }
+            
+            int rgb24_size = av_image_get_buffer_size(AV_PIX_FMT_RGB24, swFrame->width,
+                                                  swFrame->height, 1);
+            uint8_t* rgb24_buffer = new uint8_t[rgb24_size];
+            uint8_t* dstSlice[1]{rgb24_buffer};
+            int dstStride[1]{swFrame->width * 3};
+            sws_scale(sws_ctx, swFrame->data, swFrame->linesize, 0, swFrame->height, dstSlice, dstStride);
+            QImage rgb_img((uchar*)rgb24_buffer, swFrame->width, swFrame->height, QImage::Format_RGB888, [](void *info){delete info;}, rgb24_buffer);
+
+            thread()->sigPhotoShot(rgb_img);
+            sws_freeContext(sws_ctx);
+
+            thread()->photoShot().store(false);
+        }
 fail:
         if(ret < 0){
             return  ret;

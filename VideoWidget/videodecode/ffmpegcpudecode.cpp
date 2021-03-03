@@ -251,6 +251,7 @@ int FFmpegCpuDecode::decode_packet(AVCodecContext *pCodecCtx, AVPacket *packet, 
             if(!sws_ctx)
             {
                 thread()->sigPhotoShotError("sws_getContext return nullptr");
+                thread()->photoShot().store(false);
                 goto fail;
             }
             
